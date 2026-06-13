@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro-Level SFX Synthesis Engine</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0f0f14;
+            color: #d1d1de;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .studio-rack {
+            background: #181822;
+            border: 2px solid #2c2c3d;
+            border-radius: 16px;
+            padding: 25px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        }
+        h1 {
+            text-align: center;
+            color: #00ffd2;
+            margin-top: 0;
+            font-size: 28px;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #2c2c3d;
+            padding-bottom: 15px;
+        }
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .module {
+            background: #1f1f2e;
+            border: 1px solid #33334c;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        .module-title {
+            color: #00ffd2;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            border-left: 3px solid #ff007c;
+            padding-left: 8px;
+        }
+        .control { margin-bottom: 12px; }
+        label { display: block; font-size: 12px; color: #9c9caa; margin-bottom: 5px; }
+        .val { float: right; color: #ff007c; font-family: monospace; }
+        select, input[type="range"] {
+            width: 100%;
+            background: #13131c;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 6px;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-panel {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        button {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #triggerBtn { background: #00ffd2; color: #0f0f14; }
+        #triggerBtn:hover { background: #00cca9; box-shadow: 0 0 15px rgba(0,255,210,0.4); }
+        #bounceBtn { background: #ff007c; color: #fff; }
+        #bounceBtn:hover { background: #d60069; box-shadow: 0 0 15px rgba(255,0,124,0.4); }
+    </style>
+</head>
+<body>
+
+<div class="studio-rack">
+    <h1>PRO-LEVEL SFX ENGINE</h1>
+    
+    <div class="grid-layout">
+        <div class="module">
+            <div class="module-title">Oscillator Layer A</div>
+            <div class="control">
+                <label>Waveform</label>
+                <select id="oscTypeA">
+                    <option value="sawtooth">Sawtooth (Aggressive)</option>
+                    <option value="sine">Sine (Pure Sub)</option>
+                    <option value="square">Square (Chiptune)</option>
+                    <option value="triangle">Triangle (Sub-Bass)</option>
+                </select>
+            </div>
+            <div class="control">
+                <label>Start Freq <span class="val" id="oscStartA_v">800 Hz</span></label>
+                <input type="range" id="oscStartA" min="40" max="4000" value="800">
+            </div>
+            <div class="control">
+                <label>End Freq <span class="val" id="oscEndA_v">150 Hz</span></label>
+                <input type="range" id="oscEndA" min="20" max="2000" value="150">
+            </div>
+            <div class="control">
+                <label>Layer Mix <span class="val" id="oscMixA_v">0.5</span></label>
+                <input type="range" id="oscMixA" min="0" max="1" step="0.05" value="0.5">
+            </div>
+        </div>
+
+        <div class="module">
+            <div class="module-title">Oscillator Layer B (Detuned)</div>
+            <div class="control">
+                <label>Waveform</label>
+                <select id="oscTypeB">
+                    <option value="square">Square (Chiptune)</option>
+                    <option value="sawtooth">Sawtooth (Aggressive)</option>
+                    <option value="sine">Sine (Pure Sub)</option>
+                    <option value="triangle">Triangle (Sub-Bass)</option>
+                </select>
+            </div>
+            <div class="control">
+                <label>Detune Offset <span class="val" id="detuneB_v">12 cents</span></label>
+                <input type="range" id="detuneB" min="-50" max="50" value="12">
+            </div>
+            <div class="control">
+                <label>Pitch Drop Multiply <span class="val" id="multB_v">0.5x</span></label>
+                <input type="range" id="multB" min="0.1" max="3" step="0.1" value="0.5">
+            </div>
+            <div class="control">
+                <label>Layer Mix <span class="val" id="oscMixB_v">0.3</span></label>
+                <input type="range" id="oscMixB" min="0" max="1" step="0.05" value="0.3">
+            </div>
+        </div>
+
+        <div class="module">
+            <div class="module-title">Noise Layer (Texture)</div>
+            <div class="control">
+                <label>Noise Filter Type</label>
+                <select id="noiseFilterType">
+                    <option value="lowpass">Lowpass (Explosions/Rumble)</option>
+                    <option value="highpass">Highpass (Steam/Sci-Fi/Crisp)</option>
+                    <option value="bandpass">Bandpass (Radio/Wind)</option>
+                </select>
+            </div>
+            <div class="control">
+                <label>Filter Cutoff <span class="val" id="noiseFreq_v">1200 Hz</span></label>
+                <input type="range" id="noiseFreq" min="100" max="8000" value="1200">
+            </div>
+            <div class="control">
+                <label>Noise Mix <span class="val" id="noiseMix_v">0.2</span></label>
+                <input type="range" id="noiseMix" min="0" max="1" step="0.05" value="0.2">
+            </div>
+        </div>
+
+        <div class="module">
+            <div class="module-title">AHDSR Dynamics Envelope</div>
+            <div class="control">
+                <label>Attack Time <span class="val" id="envEnvA_v">0.02s</span></label>
+                <input type="range" id="envEnvA" min="0" max="1" step="0.01" value="0.02">
+            </div>
+            <div class="control">
+                <label>Hold Time <span class="val" id="envEnvH_v">0.05s</span></label>
+                <input type="range" id="envEnvH" min="0" max="0.5" step="0.01" value="0.05">
+            </div>
+            <div class="control">
+                <label>Decay/Release Time <span class="val" id="envEnvD_v">0.40s</span></label>
+                <input type="range" id="envEnvD" min="0.05" max="3" step="0.05" value="0.4">
+            </div>
+        </div>
+
+        <div class="module">
+            <div class="module-title">Master Swept Filter</div>
+            <div class="control">
+                <label>Filter Type</label>
+                <select id="mainFilterType">
+                    <option value="lowpass">Lowpass (Warm/Heavy)</option>
+                    <option value="highpass">Highpass (Thinned Out)</option>
+                </select>
+            </div>
+            <div class="control">
+                <label>Start Frequency <span class="val" id="filterStart_v">3000 Hz</span></label>
+                <input type="range" id="filterStart" min="100" max="12000" value="3000">
+            </div>
+            <div class="control">
+                <label>Resonance (Q-Factor) <span class="val" id="filterQ_v">4</span></label>
+                <input type="range" id="filterQ" min="0" max="25" value="4">
+            </div>
+        </div>
+
+        <div class="module">
+            <div class="module-title">Spatial FX Matrix</div>
+            <div class="control">
+                <label>Delay Echo Time <span class="val" id="delayTime_v">0.15s</span></label>
+                <input type="range" id="delayTime" min="0.05" max="1" step="0.05" value="0.15">
+            </div>
+            <div class="control">
+                <label>Feedback Level <span class="val" id="delayFb_v">30%</span></label>
+                <input type="range" id="delayFb" min="0" max="95" value="30">
+            </div>
+            <div class="control">
+                <label>Saturator Drive <span class="val" id="drive_v">15</span></label>
+                <input type="range" id="drive" min="0" max="100" value="15">
+            </div>
+        </div>
+
+        <div class="btn-panel">
+            <button id="triggerBtn">MONITOR MASTER PATCH</button>
+            <button id="bounceBtn">BOUNCE & DOWNLOAD WAV</button>
+        </div>
+        
+     <h3>Convert your WebM recording to MP3 (Free & Browser-based)</h3>
+        <ul>
+  <li><a href="https://online-audio-converter.com/" target="_blank">Online Audio Converter</a></li>
+  <li><a href="https://cloudconvert.com/webm-to-mp3" target="_blank">CloudConvert WebM to MP3</a></li>
+  <li><a href="https://convertio.co/webm-mp3/" target="_blank">Convertio WebM to MP3</a></li>
+  <li><a href="https://audio.online-convert.com/convert-to-mp3" target="_blank">Audio Converter Online</a></li>
+</ul>
+
+    </div>
+</div>
+
+<script>
+    // Automate slider value string binding
+    const sliders = ['oscStartA', 'oscEndA', 'oscMixA', 'detuneB', 'multB', 'oscMixB', 'noiseFreq', 'noiseMix', 'envEnvA', 'envEnvH', 'envEnvD', 'filterStart', 'filterQ', 'delayTime', 'delayFb', 'drive'];
+    const units = { oscStartA:' Hz', oscEndA:' Hz', noiseFreq:' Hz', filterStart:' Hz', envEnvA:'s', envEnvH:'s', envEnvD:'s', delayTime:'s', delayFb:'%', detuneB:' cents', multB:'x' };
+    sliders.forEach(id => {
+        const input = document.getElementById(id);
+        const display = document.getElementById(id + '_v');
+        input.oninput = () => display.textContent = input.value + (units[id] || '');
+    });
+
+    function getUIEngineParams() {
+        return {
+            typeA: document.getElementById('oscTypeA').value,
+            startFA: parseFloat(document.getElementById('oscStartA').value),
+            endFA: parseFloat(document.getElementById('oscEndA').value),
+            mixA: parseFloat(document.getElementById('oscMixA').value),
+            typeB: document.getElementById('oscTypeB').value,
+            detuneB: parseFloat(document.getElementById('detuneB').value),
+            multB: parseFloat(document.getElementById('multB').value),
+            mixB: parseFloat(document.getElementById('oscMixB').value),
+            nType: document.getElementById('noiseFilterType').value,
+            nFreq: parseFloat(document.getElementById('noiseFreq').value),
+            nMix: parseFloat(document.getElementById('noiseMix').value),
+            envA: parseFloat(document.getElementById('envEnvA').value),
+            envH: parseFloat(document.getElementById('envEnvH').value),
+            envD: parseFloat(document.getElementById('envEnvD').value),
+            fType: document.getElementById('mainFilterType').value,
+            fStart: parseFloat(document.getElementById('filterStart').value),
+            fQ: parseFloat(document.getElementById('filterQ').value),
+            dTime: parseFloat(document.getElementById('delayTime').value),
+            dFb: parseFloat(document.getElementById('delayFb').value) / 100,
+            drive: parseFloat(document.getElementById('drive').value)
+        };
+    }
+
+    // Mathematical Buffer Node Definition for Procedural White Noise Layer
+    function createWhiteNoiseBuffer(ctx) {
+        const bufferSize = ctx.sampleRate * 4; // 4 seconds max cache
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+        return buffer;
+    }
+
+    // Master DSP Graph Assembly Function
+    function buildAdvancedDSPGraph(ctx, p, finalDestination) {
+        const time = ctx.currentTime;
+        const duration = p.envA + p.envH + p.envD;
+
+        // --- SOURCES ---
+        const oscA = ctx.createOscillator();
+        oscA.type = p.typeA;
+        oscA.frequency.setValueAtTime(p.startFA, time);
+        oscA.frequency.exponentialRampToValueAtTime(p.endFA, time + duration);
+
+        const oscB = ctx.createOscillator();
+        oscB.type = p.typeB;
+        oscB.detune.setValueAtTime(p.detuneB, time);
+        oscB.frequency.setValueAtTime(p.startFA * p.multB, time);
+        oscB.frequency.exponentialRampToValueAtTime(p.endFA * p.multB, time + duration);
+
+        const noiseSrc = ctx.createBufferSource();
+        noiseSrc.buffer = createWhiteNoiseBuffer(ctx);
+        noiseSrc.loop = true;
+
+        const noiseFilt = ctx.createBiquadFilter();
+        noiseFilt.type = p.nType;
+        noiseFilt.frequency.setValueAtTime(p.nFreq, time);
+
+        // --- MIX MATRIX BUSSES ---
+        const gainA = ctx.createGain(); gainA.gain.setValueAtTime(p.mixA, time);
+        const gainB = ctx.createGain(); gainB.gain.setValueAtTime(p.mixB, time);
+        const gainN = ctx.createGain(); gainN.gain.setValueAtTime(p.nMix, time);
+
+        const masterMixer = ctx.createGain();
+
+        // Connect Sources to Mix Matrix
+        oscA.connect(gainA); gainA.connect(masterMixer);
+        oscB.connect(gainB); gainB.connect(masterMixer);
+        noiseSrc.connect(noiseFilt); noiseFilt.connect(gainN); gainN.connect(masterMixer);
+
+        // --- DYNAMICS ENVELOPE (AHDSR Shape Processing) ---
+        const vEnv = ctx.createGain();
+        vEnv.gain.setValueAtTime(0, time);
+        vEnv.gain.linearRampToValueAtTime(1.0, time + p.envA); // Attack
+        vEnv.gain.setValueAtTime(1.0, time + p.envA + p.envH); // Hold
+        vEnv.gain.exponentialRampToValueAtTime(0.0001, time + p.envA + p.envH + p.envD); // Decay/Release
+
+        masterMixer.connect(vEnv);
+
+        // --- MASTER ANALOG RESONANT FILTER SWEEP ---
+        const mainFilter = ctx.createBiquadFilter();
+        mainFilter.type = p.fType;
+        mainFilter.Q.setValueAtTime(p.fQ, time);
+        mainFilter.frequency.setValueAtTime(p.fStart, time);
+        mainFilter.frequency.exponentialRampToValueAtTime(Math.max(30, p.fStart * 0.05), time + duration);
+
+        vEnv.connect(mainFilter);
+
+        // --- SATURATOR (DISTORTION ENGINE) ---
+        let lastNode = mainFilter;
+        if (p.drive > 0) {
+            const shaper = ctx.createWaveShaper();
+            shaper.curve = generateSaturatorCurve(p.drive);
+            shaper.oversample = '4x';
+            lastNode.connect(shaper);
+            lastNode = shaper;
+        }
+
+        // --- STEREO SPACE MATRIX (DELAY ENGINE) ---
+        if (p.dTime > 0 && p.dFb > 0) {
+            const delayNode = ctx.createDelay();
+            const delayFeedback = ctx.createGain();
+            
+            delayNode.delayTime.setValueAtTime(p.dTime, time);
+            delayFeedback.gain.setValueAtTime(p.dFb, time);
+
+            // Create classic hardware loop feedback routing topology
+            lastNode.connect(delayNode);
+            delayNode.connect(delayFeedback);
+            delayFeedback.connect(delayNode); 
+            
+            // Re-merge delay reflections with direct signal dry path
+            const spatialMixer = ctx.createGain();
+            lastNode.connect(spatialMixer);
+            delayNode.connect(spatialMixer);
+            spatialMixer.connect(finalDestination);
+        } else {
+            lastNode.connect(finalDestination);
+        }
+
+        return { oscA, oscB, noiseSrc, duration };
+    }
+
+    function generateSaturatorCurve(amount) {
+        const k = amount;
+        const samples = 44100;
+        const curve = new Float32Array(samples);
+        for (let i = 0 ; i < samples; ++i ) {
+            const x = (i * 2) / samples - 1;
+            curve[i] = ((3 + k) * x) / (3 + k * Math.abs(x));
+        }
+        return curve;
+    }
+
+    // Runtime Monitoring Engine (Playback Link)
+    document.getElementById('triggerBtn').onclick = () => {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const params = getUIEngineParams();
+        const graph = buildAdvancedDSPGraph(ctx, params, ctx.destination);
+        
+        graph.oscA.start(ctx.currentTime);
+        graph.oscB.start(ctx.currentTime);
+        graph.noiseSrc.start(ctx.currentTime);
+
+        const stopTime = ctx.currentTime + graph.duration + (params.dTime * 4); // Include tail overhead for echo reflections
+        graph.oscA.stop(stopTime);
+        graph.oscB.stop(stopTime);
+        graph.noiseSrc.stop(stopTime);
+    };
+
+    // Rendering Engine Compilation Pipeline (WAV Exporter)
+    document.getElementById('bounceBtn').onclick = () => {
+        const params = getUIEngineParams();
+        const sampleRate = 44100;
+        const coreDuration = params.envA + params.envH + params.envD;
+        const tailTime = params.dTime * 5; // Reserve audio allocation room for trailing delay echos
+        const totalDuration = coreDuration + tailTime;
+
+        const offlineCtx = new OfflineAudioContext(1, sampleRate * totalDuration, sampleRate);
+        const graph = buildAdvancedDSPGraph(offlineCtx, params, offlineCtx.destination);
+
+        graph.oscA.start(0);
+        graph.oscB.start(0);
+        graph.noiseSrc.start(0);
+        
+        graph.oscA.stop(totalDuration);
+        graph.oscB.stop(totalDuration);
+        graph.noiseSrc.stop(totalDuration);
+
+        offlineCtx.startRendering().then((renderedBuffer) => {
+            const wavBlob = parseAudioBufferToRIFFWav(renderedBuffer);
+            const downloadUrl = URL.createObjectURL(wavBlob);
+            const execLink = document.createElement('a');
+            execLink.href = downloadUrl;
+            execLink.download = `pro_sfx_${Math.floor(Date.now()/1000)}.wav`;
+            execLink.click();
+            URL.revokeObjectURL(downloadUrl);
+        });
+    };
+
+    // Deep Binary Serialization (Float32 to Int16 RIFF Format Audio Translation Layout)
+    function parseAudioBufferToRIFFWav(buffer) {
+        const totalChannels = buffer.numberOfChannels;
+        const frameLength = buffer.length * totalChannels * 2 + 44;
+        const outputBuffer = new ArrayBuffer(frameLength);
+        const dataView = new DataView(outputBuffer);
+        const channelArrays = [];
+        let internalBytePosition = 0;
+        let indexOffset = 0;
+
+        const write32 = (val) => { dataView.setUint32(internalBytePosition, val, true); internalBytePosition += 4; };
+        const write16 = (val) => { dataView.setUint16(internalBytePosition, val, true); internalBytePosition += 2; };
+
+        // RIFF Architecture Framing Meta-blocks
+        write32(0x46464952); // "RIFF" Marker Signature
+        write32(frameLength - 8); 
+        write32(0x45564157); // "WAVE" Protocol Subtype
+        write32(0x20746d66); // "fmt " Sub-chunk descriptor
+        write32(16);          // Substructure Payload Frame scale (Linear Pulse Code Modulation)
+        write16(1);           // Floating parameters conversion map code to PCM uncompressed integers
+        write16(totalChannels);
+        write32(buffer.sampleRate);
+        write32(buffer.sampleRate * 2 * totalChannels); // Streaming pipeline transfer rate byte speed
+        write16(totalChannels * 2);
+        write16(16);         // Constant bit precision architecture (Studio standard 16-Bit resolution depth)
+        write32(0x61746164); // "data" Chunk Identifier Tag
+        write32(frameLength - internalBytePosition - 4);
+
+        for(let c = 0; c < totalChannels; c++) {
+            channelArrays.push(buffer.getChannelData(c));
+        }
+
+        while(internalBytePosition < frameLength) {
+            for(let c = 0; c < totalChannels; c++) {
+                let pcmSample = Math.max(-1, Math.min(1, channelArrays[c][indexOffset])); // Clip Guard Rails
+                pcmSample = pcmSample < 0 ? pcmSample * 0x8000 : pcmSample * 0x7FFF;       // Quantize mapping to linear integer arrays
+                dataView.setInt16(internalBytePosition, pcmSample, true);
+                internalBytePosition += 2;
+            }
+            indexOffset++;
+        }
+        return new Blob([outputBuffer], {type: "audio/wav"});
+    }
+</script>
+
+</body>
+</html>
